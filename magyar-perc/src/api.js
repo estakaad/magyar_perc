@@ -23,9 +23,9 @@ export async function generateText(theme) {
   const prompt = `Write a natural B1-B2 Hungarian text (exactly 5 sentences) about one specific situation within the theme: "${theme}". Pick a narrow angle, not a general overview. Avoid rare words.
 
 Return the text followed by ONLY this JSON (nothing else after the text):
-{"words":[{"hu":"word_from_text","et":"Estonian translation","note":"brief grammar note"}],"exercises":[{"sentence":"sentence with ___","correct":"correct_word","distractors":["w1","w2"]}]}
+{"words":[{"hu":"word_from_text","et":"Estonian translation","note":"brief grammar note in Estonian"}]}
 
-List 8-10 key words. Include 5 fill-in-the-blank exercises using words from the text. Distractors should be the same part of speech.`;
+List 8-10 key words from the text.`;
 
   return callClaude([{ role: 'user', content: prompt }], ESTONIAN_GRAMMAR_GUIDE, 1000);
 }
