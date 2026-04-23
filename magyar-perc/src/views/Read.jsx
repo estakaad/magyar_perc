@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { generateText, explainSentence } from '../api';
+import { generateText } from '../api';
 import TextDisplay from '../components/TextDisplay';
 import FillBlank from '../components/FillBlank';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -40,13 +40,9 @@ export default function Read({ words }) {
   const [exercises, setExercises] = useState([]);
   const [fromCache, setFromCache] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [explainMode, setExplainMode] = useState(false);
-  const [explanation, setExplanation] = useState('');
-  const [explainLoading, setExplainLoading] = useState(false);
   const [showExercises, setShowExercises] = useState(false);
   const [exerciseIndex, setExerciseIndex] = useState(0);
 
-  // Load cached text when theme changes
   useEffect(() => {
     const cached = loadCache().find(c => c.theme === theme);
     if (cached) {
@@ -60,8 +56,6 @@ export default function Read({ words }) {
       setExercises([]);
       setFromCache(false);
     }
-    setExplainMode(false);
-    setExplanation('');
     setShowExercises(false);
     setExerciseIndex(0);
   }, [theme]);
@@ -71,8 +65,6 @@ export default function Read({ words }) {
     setBodyText('');
     setTextWords([]);
     setExercises([]);
-    setExplanation('');
-    setExplainMode(false);
     setShowExercises(false);
     setExerciseIndex(0);
     try {
@@ -97,24 +89,8 @@ export default function Read({ words }) {
     setLoading(false);
   };
 
-  const handleSentenceClick = async (sentence) => {
-    if (!explainMode || explainLoading) return;
-    setExplainLoading(true);
-    setExplanation('');
-    try {
-      const result = await explainSentence(sentence.trim());
-      setExplanation(result);
-    } catch {
-      setExplanation('Viga selgituse saamisel.');
-    }
-    setExplainLoading(false);
-  };
-
-  const sentences = bodyText ? bodyText.split(/(?<=[.!?])\s+/).filter(Boolean) : [];
-
   return (
     <div className="p-4">
-      {/* Theme pills */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-4 px-4 scrollbar-hide">
         {THEMES.map(t => (
           <button
@@ -129,7 +105,6 @@ export default function Read({ words }) {
         ))}
       </div>
 
-      {/* Buttons */}
       <div className="flex gap-2 mb-4">
         <button
           onClick={handleGenerate}
@@ -138,39 +113,18 @@ export default function Read({ words }) {
         >
           {loading ? <><Spinner small /> Genereerin...</> : fromCache ? 'Genereeri uus' : 'Genereeri tekst'}
         </button>
-        {fromCache && bodyText && (
-          <button
-            onClick={() => { setFromCache(false); }}
-            className="px-4 py-3 bg-stone-100 hover:bg-stone-200 text-stone-500 text-sm rounded-xl transition-colors"
-          >
-            ↺
-          </button>
-        )}
       </div>
 
       {fromCache && bodyText && (
         <p className="text-xs text-stone-400 -mt-2 mb-3">vahemälust — vajuta "Genereeri uus" uue teksti saamiseks</p>
       )}
 
-      {/* Text */}
       {bodyText && !showExercises && (
         <div className="mb-4">
-          {explainMode ? (
-            <div className="text-lg leading-relaxed text-stone-800">
-              {sentences.map((s, i) => (
-                <span key={i} onClick={() => handleSentenceClick(s)}
-                  className="cursor-pointer hover:bg-amber-50 rounded px-0.5 transition-colors">
-                  {s}{' '}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <TextDisplay text={bodyText} words={textWords} savedWords={words.items} onSaveWord={words.add} />
-          )}
+          <TextDisplay text={bodyText} words={textWords} savedWords={words.items} onSaveWord={words.add} />
         </div>
       )}
 
-      {/* Exercises mode */}
       {showExercises && exercises.length > 0 && (
         <div className="mb-4">
           <div className="flex justify-between items-center mb-3">
@@ -180,7 +134,7 @@ export default function Read({ words }) {
           <FillBlank
             key={exerciseIndex}
             exercise={exercises[exerciseIndex]}
-            onNext={(wasCorrect) => {
+            onNext={() => {
               if (exerciseIndex + 1 < exercises.length) setExerciseIndex(i => i + 1);
               else { setShowExercises(false); setExerciseIndex(0); }
             }}
@@ -188,43 +142,13 @@ export default function Read({ words }) {
         </div>
       )}
 
-      {/* Controls */}
-      {bodyText && !showExercises && (
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => { setExplainMode(!explainMode); setExplanation(''); }}
-            className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
-              explainMode ? 'bg-amber-100 text-amber-700' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-            }`}
-          >
-            {explainMode ? '✕ Lõpeta' : '💡 Selgita lauset'}
-          </button>
-          {exercises.length > 0 && (
-            <button
-              onClick={() => { setShowExercises(true); setExerciseIndex(0); }}
-              className="text-sm px-3 py-1.5 rounded-lg bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors"
-            >
-              ✏️ Harjuta ({exercises.length})
-            </button>
-          )}
-        </div>
-      )}
-
-      {explainMode && bodyText && !explanation && !explainLoading && (
-        <p className="text-stone-400 text-sm italic mt-2">Vajuta lausele selgituse saamiseks</p>
-      )}
-      {explainLoading && (
-        <div className="flex justify-center py-4">
-          <svg className="animate-spin h-5 w-5 text-amber-500" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-          </svg>
-        </div>
-      )}
-      {explanation && (
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-stone-700 text-sm leading-relaxed mt-3">
-          {explanation}
-        </div>
+      {bodyText && !showExercises && exercises.length > 0 && (
+        <button
+          onClick={() => { setShowExercises(true); setExerciseIndex(0); }}
+          className="text-sm px-3 py-1.5 rounded-lg bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors"
+        >
+          ✏️ Harjuta ({exercises.length})
+        </button>
       )}
     </div>
   );
