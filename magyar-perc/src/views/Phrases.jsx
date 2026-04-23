@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { generatePhrases } from '../api';
-import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const THEMES = [
   'üldised', 'emotsioonid', 'argielust', 'toit', 'aeg', 'raha',
@@ -98,31 +97,26 @@ function ReviewMode({ savedPhrases, onBack }) {
   );
 }
 
-export default function Phrases() {
+export default function Phrases({ phrases }) {
   const [theme, setTheme] = useState('üldised');
-  const [phrases, setPhrases] = useState([]);
+  const [generated, setGenerated] = useState([]);
   const [loading, setLoading] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
-  const [savedPhrases, setSavedPhrases] = useLocalStorage('savedPhrases', []);
+  const savedPhrases = phrases.items;
 
   const handleGenerate = async () => {
     setLoading(true);
-    setPhrases([]);
+    setGenerated([]);
     try {
       const result = await generatePhrases(theme);
-      setPhrases(result.phrases || []);
+      setGenerated(result.phrases || []);
     } catch {
-      setPhrases([]);
+      setGenerated([]);
     }
     setLoading(false);
   };
 
-  const handleSave = (phrase) => {
-    setSavedPhrases(prev => {
-      if (prev.some(p => p.hu === phrase.hu)) return prev.filter(p => p.hu !== phrase.hu);
-      return [...prev, phrase];
-    });
-  };
+  const handleSave = (phrase) => phrases.toggle(phrase);
 
   if (reviewMode) {
     return (
@@ -171,7 +165,7 @@ export default function Phrases() {
       </div>
 
       <div className="space-y-3">
-        {phrases.map((phrase, i) => (
+        {generated.map((phrase, i) => (
           <PhraseCard
             key={i}
             phrase={phrase}

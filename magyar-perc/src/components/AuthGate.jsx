@@ -22,7 +22,7 @@ export default function AuthGate({ onSuccess }) {
             const payload = decodeJwt(response.credential);
             if (payload.email === allowedEmail) {
               sessionStorage.setItem('auth', payload.email);
-              onSuccess();
+              onSuccess(payload.email);
             } else {
               setError('Juurdepääs keelatud');
             }

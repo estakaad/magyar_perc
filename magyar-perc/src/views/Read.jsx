@@ -19,10 +19,10 @@ function Spinner({ small }) {
   );
 }
 
-export default function Read({ savedWords, setSavedWords }) {
+export default function Read({ words }) {
   const [theme, setTheme] = useLocalStorage('lastTheme', 'igapäevaelu');
   const [bodyText, setBodyText] = useState('');
-  const [words, setWords] = useState([]);
+  const [textWords, setTextWords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [explainMode, setExplainMode] = useState(false);
   const [explanation, setExplanation] = useState('');
@@ -31,7 +31,7 @@ export default function Read({ savedWords, setSavedWords }) {
   const handleGenerate = async () => {
     setLoading(true);
     setBodyText('');
-    setWords([]);
+    setTextWords([]);
     setExplanation('');
     setExplainMode(false);
     try {
@@ -39,7 +39,7 @@ export default function Read({ savedWords, setSavedWords }) {
       const jsonMatch = result.match(/\{[\s\S]*"words"[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        setWords(parsed.words || []);
+        setTextWords(parsed.words || []);
         setBodyText(result.slice(0, result.indexOf(jsonMatch[0])).trim());
       } else {
         setBodyText(result.trim());
@@ -63,21 +63,12 @@ export default function Read({ savedWords, setSavedWords }) {
     setExplainLoading(false);
   };
 
-  const handleSaveWord = (word) => {
-    setSavedWords(prev => {
-      if (prev.some(w => w.hu === word.hu)) return prev;
-      return [...prev, word];
-    });
-  };
-
-  // Split into sentences for explain mode
   const sentences = bodyText
     ? bodyText.split(/(?<=[.!?])\s+/).filter(Boolean)
     : [];
 
   return (
     <div className="p-4">
-      {/* Theme pills */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-4 px-4 scrollbar-hide">
         {THEMES.map(t => (
           <button
@@ -94,7 +85,6 @@ export default function Read({ savedWords, setSavedWords }) {
         ))}
       </div>
 
-      {/* Generate button */}
       <button
         onClick={handleGenerate}
         disabled={loading}
@@ -103,7 +93,6 @@ export default function Read({ savedWords, setSavedWords }) {
         {loading ? <><Spinner small /> Genereerin...</> : 'Genereeri tekst'}
       </button>
 
-      {/* Text */}
       {bodyText && (
         <div className="mb-4">
           {explainMode ? (
@@ -121,15 +110,14 @@ export default function Read({ savedWords, setSavedWords }) {
           ) : (
             <TextDisplay
               text={bodyText}
-              words={words}
-              savedWords={savedWords}
-              onSaveWord={handleSaveWord}
+              words={textWords}
+              savedWords={words.items}
+              onSaveWord={words.add}
             />
           )}
         </div>
       )}
 
-      {/* Explain toggle */}
       {bodyText && (
         <button
           onClick={() => { setExplainMode(!explainMode); setExplanation(''); }}
@@ -143,7 +131,6 @@ export default function Read({ savedWords, setSavedWords }) {
         </button>
       )}
 
-      {/* Explanation */}
       {explainMode && bodyText && !explanation && !explainLoading && (
         <p className="text-stone-400 text-sm italic">Vajuta lausele selgituse saamiseks</p>
       )}

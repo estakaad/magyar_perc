@@ -3,7 +3,7 @@ import AuthGate from './components/AuthGate';
 import Read from './views/Read';
 import Review from './views/Review';
 import Phrases from './views/Phrases';
-import { useLocalStorage } from './hooks/useLocalStorage';
+import { useSyncedList } from './hooks/useSync';
 
 const TABS = [
   { id: 'read', label: 'Loe' },
@@ -11,9 +11,10 @@ const TABS = [
   { id: 'phrases', label: 'Väljendid' },
 ];
 
-function App() {
+function App({ email }) {
   const [activeTab, setActiveTab] = useState('read');
-  const [savedWords, setSavedWords] = useLocalStorage('savedWords', []);
+  const words = useSyncedList('words', email);
+  const phrases = useSyncedList('phrases', email);
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col max-w-lg mx-auto relative">
@@ -22,9 +23,9 @@ function App() {
       </header>
 
       <main className="flex-1 overflow-y-auto pb-20">
-        <div className={activeTab === 'read' ? '' : 'hidden'}><Read savedWords={savedWords} setSavedWords={setSavedWords} /></div>
-        <div className={activeTab === 'review' ? '' : 'hidden'}><Review savedWords={savedWords} setSavedWords={setSavedWords} /></div>
-        <div className={activeTab === 'phrases' ? '' : 'hidden'}><Phrases /></div>
+        <div className={activeTab === 'read' ? '' : 'hidden'}><Read words={words} /></div>
+        <div className={activeTab === 'review' ? '' : 'hidden'}><Review words={words} /></div>
+        <div className={activeTab === 'phrases' ? '' : 'hidden'}><Phrases phrases={phrases} /></div>
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 z-40">
@@ -49,7 +50,7 @@ function App() {
 }
 
 export default function Root() {
-  const [authed, setAuthed] = useState(!!sessionStorage.getItem('auth'));
-  if (!authed) return <AuthGate onSuccess={() => setAuthed(true)} />;
-  return <App />;
+  const [email, setEmail] = useState(sessionStorage.getItem('auth'));
+  if (!email) return <AuthGate onSuccess={(e) => setEmail(e)} />;
+  return <App email={email} />;
 }

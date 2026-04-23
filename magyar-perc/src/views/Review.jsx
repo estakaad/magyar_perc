@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
 import Flashcard from '../components/Flashcard';
 import FillBlank from '../components/FillBlank';
 
-export default function Review({ savedWords, setSavedWords }) {
-  const [cardStats, setCardStats] = useLocalStorage('cardStats', {});
+export default function Review({ words }) {
+  const savedWords = words.items;
   const [mode, setMode] = useState('cards'); // 'cards' | 'fill'
   const [queue, setQueue] = useState(null); // null = not started
   const [index, setIndex] = useState(0);
@@ -22,20 +21,14 @@ export default function Review({ savedWords, setSavedWords }) {
 
   const handleKnew = () => {
     const word = queue[index];
-    setCardStats(prev => ({
-      ...prev,
-      [word.hu]: { correct: (prev[word.hu]?.correct || 0) + 1, wrong: prev[word.hu]?.wrong || 0 },
-    }));
+    words.updateStats(word.hu, 'correct');
     setScore(s => ({ ...s, correct: s.correct + 1 }));
     next(false);
   };
 
   const handleDidntKnow = () => {
     const word = queue[index];
-    setCardStats(prev => ({
-      ...prev,
-      [word.hu]: { correct: prev[word.hu]?.correct || 0, wrong: (prev[word.hu]?.wrong || 0) + 1 },
-    }));
+    words.updateStats(word.hu, 'wrong');
     setScore(s => ({ ...s, wrong: s.wrong + 1 }));
     setWrong(w => [...w, word]);
     next(true);
