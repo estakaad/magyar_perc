@@ -1,18 +1,12 @@
-const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
 const MODEL = 'claude-sonnet-4-20250514';
 
 async function callClaude(messages, system = null, maxTokens = 1000) {
   const body = { model: MODEL, max_tokens: maxTokens, messages };
   if (system) body.system = system;
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('/api/claude', {
     method: 'POST',
-    headers: {
-      'x-api-key': API_KEY,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   });
 

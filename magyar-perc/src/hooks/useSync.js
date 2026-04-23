@@ -14,7 +14,8 @@ export function useSyncedList(table, email) {
       .select('*')
       .eq('email', email)
       .order('created_at', { ascending: true })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error(`[${table}] load error:`, error);
         if (data) setItems(data);
         setReady(true);
       });
@@ -23,8 +24,9 @@ export function useSyncedList(table, email) {
   const add = async (item) => {
     const exists = items.some(i => i.hu === item.hu);
     if (exists) return;
-    const row = { ...item, email };
-    const { data } = await supabase.from(table).insert(row).select().single();
+    const row = { hu: item.hu, et: item.et || '', note: item.note || '', email };
+    const { data, error } = await supabase.from(table).insert(row).select().single();
+    if (error) console.error(`[${table}] insert error:`, error);
     if (data) setItems(prev => [...prev, data]);
   };
 
