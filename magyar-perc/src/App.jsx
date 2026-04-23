@@ -2,13 +2,13 @@ import { useState } from 'react';
 import AuthGate from './components/AuthGate';
 import Read from './views/Read';
 import Review from './views/Review';
-import Ask from './views/Ask';
+import Phrases from './views/Phrases';
 import { useLocalStorage } from './hooks/useLocalStorage';
 
 const TABS = [
   { id: 'read', label: 'Loe' },
   { id: 'review', label: 'Korda' },
-  { id: 'ask', label: 'Küsi' },
+  { id: 'phrases', label: 'Väljendid' },
 ];
 
 function App() {
@@ -24,7 +24,7 @@ function App() {
       <main className="flex-1 overflow-y-auto pb-20">
         <div className={activeTab === 'read' ? '' : 'hidden'}><Read savedWords={savedWords} setSavedWords={setSavedWords} /></div>
         <div className={activeTab === 'review' ? '' : 'hidden'}><Review savedWords={savedWords} setSavedWords={setSavedWords} /></div>
-        <div className={activeTab === 'ask' ? '' : 'hidden'}><Ask /></div>
+        <div className={activeTab === 'phrases' ? '' : 'hidden'}><Phrases /></div>
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 z-40">

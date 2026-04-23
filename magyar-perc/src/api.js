@@ -37,6 +37,16 @@ Loetle 8-10 tekstis esinevat kasulikku sõna. Note näited: "tagasõna + -ban/-b
   return callClaude([{ role: 'user', content: prompt }], null, 800);
 }
 
+export async function translateWord(word) {
+  const prompt = `Tõlgi see ungari sõna eesti keelde ja anna lühike grammatikanote.
+Tagasta AINULT JSON, ilma preamblita:
+{"et": "eesti tõlge", "note": "lühike grammatikanote või tühi string"}
+Sõna: ${word}`;
+  const text = await callClaude([{ role: 'user', content: prompt }]);
+  const match = text.match(/\{[\s\S]*\}/);
+  return JSON.parse(match[0]);
+}
+
 export async function explainSentence(sentence) {
   const prompt = `Selgita lühidalt selle ungarikeelse lause grammatikat eesti keeles.
 Ole praktiline — mis vorm on, miks kasutatakse.
@@ -62,12 +72,14 @@ Eksitavad sõnad olgu sama sõnaliik, natuke sarnased.`;
   return JSON.parse(match[0]);
 }
 
-export async function chat(messages) {
-  const system = `Sa oled ungari keele õpetaja. Kasutaja räägib eesti keelt ja õpib ungari keelt tasemel B1-B2 (pikk paus, harjutab uuesti).
-Vasta lühidalt ja praktiliselt eesti keeles.
-Kasuta ungarikeelseid näiteid koos tõlgetega.
-Ära loe loengut — vasta ainult küsimusele.
-Maksimaalne vastuse pikkus: 150 sõna.`;
+export async function generatePhrases(theme) {
+  const prompt = `Genereeri 5 ungari kõnekäändu või fraseoloogilist väljendit.
+Teema/valdkond: ${theme}.
+Vali väljendeid mida päriselt kasutatakse, B1-B2 tasemele sobivad.
+Tagasta AINULT JSON, ilma preamblita:
+{"phrases": [{"hu": "väljend ungari keeles", "literal": "sõnasõnaline tõlge eesti keeles", "meaning": "tegelik tähendus eesti keeles", "example": "lühike näitelause ungari keeles"}]}`
 
-  return callClaude(messages, system);
+  const text = await callClaude([{ role: 'user', content: prompt }], null, 1000);
+  const match = text.match(/\{[\s\S]*\}/);
+  return JSON.parse(match[0]);
 }
