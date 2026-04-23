@@ -1,14 +1,22 @@
 import { useState, useEffect } from 'react';
 import { generateFillBlank } from '../api';
 
-export default function FillBlank({ word, onNext }) {
+// Accepts either `exercise` (pre-generated) or `word` (fetches from API)
+export default function FillBlank({ word, exercise: preGenerated, onNext }) {
   const [exercise, setExercise] = useState(null);
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!preGenerated);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (preGenerated) {
+      setExercise(preGenerated);
+      setOptions([...preGenerated.distractors, preGenerated.correct].sort(() => Math.random() - 0.5));
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     setExercise(null);
@@ -19,8 +27,7 @@ export default function FillBlank({ word, onNext }) {
       .then(result => {
         if (cancelled) return;
         setExercise(result);
-        const shuffled = [...result.distractors, result.correct].sort(() => Math.random() - 0.5);
-        setOptions(shuffled);
+        setOptions([...result.distractors, result.correct].sort(() => Math.random() - 0.5));
         setLoading(false);
       })
       .catch(() => {
@@ -30,12 +37,15 @@ export default function FillBlank({ word, onNext }) {
       });
 
     return () => { cancelled = true; };
-  }, [word.hu]);
+  }, [word?.hu, preGenerated]);
 
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <Spinner />
+        <svg className="animate-spin h-6 w-6 text-amber-500" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+        </svg>
       </div>
     );
   }
@@ -90,14 +100,5 @@ export default function FillBlank({ word, onNext }) {
         </button>
       )}
     </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <svg className="animate-spin h-6 w-6 text-amber-500" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-    </svg>
   );
 }

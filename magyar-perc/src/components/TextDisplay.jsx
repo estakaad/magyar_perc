@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import WordTooltip from './WordTooltip';
 import { translateWord } from '../api';
+import dict from '../data/hu_et_dict.json';
 
 export default function TextDisplay({ text, words, savedWords, onSaveWord }) {
   const [activeWord, setActiveWord] = useState(null);
@@ -34,7 +35,14 @@ export default function TextDisplay({ text, words, savedWords, onSaveWord }) {
       return;
     }
 
-    // Unknown word — fetch translation
+    // Check static dictionary first
+    const dictEntry = dict[clean.toLowerCase()];
+    if (dictEntry) {
+      setActiveWord({ hu: clean, et: dictEntry.et, note: dictEntry.note });
+      return;
+    }
+
+    // Fall back to API
     setActiveWord({ hu: clean });
     try {
       const result = await translateWord(clean);
