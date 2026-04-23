@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import Flashcard from '../components/Flashcard';
 import FillBlank from '../components/FillBlank';
+import { DEFAULT_UI } from '../ui';
 
 const today = () => new Date().toISOString().split('T')[0];
 
-export default function Review({ words, settings }) {
+export default function Review({ words, settings, ui = DEFAULT_UI }) {
   const savedWords = words.items;
   const dueWords = savedWords.filter(w => !w.next_review || w.next_review <= today());
   const upcomingCount = savedWords.length - dueWords.length;
@@ -54,7 +55,7 @@ export default function Review({ words, settings }) {
     return (
       <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
         <div className="text-4xl mb-3">⭐</div>
-        <p className="text-stone-500 text-lg">Lisa sõnu Loe vaates ⭐ nupuga.</p>
+        <p className="text-stone-500 text-lg">{ui.add_words_hint}</p>
       </div>
     );
   }
@@ -66,13 +67,13 @@ export default function Review({ words, settings }) {
           onClick={() => { setMode('cards'); setQueue(null); setDone(false); }}
           className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${mode === 'cards' ? 'bg-amber-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
         >
-          Kaardid
+          {ui.cards}
         </button>
         <button
           onClick={() => { setMode('fill'); setQueue(null); setDone(false); }}
           className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${mode === 'fill' ? 'bg-amber-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
         >
-          Lünktäitmine
+          {ui.fill_blank_mode}
         </button>
       </div>
 
@@ -81,24 +82,22 @@ export default function Review({ words, settings }) {
           {dueWords.length > 0 ? (
             <>
               <p className="text-2xl font-bold text-stone-800 mb-1">{dueWords.length}</p>
-              <p className="text-stone-500 mb-1">sõna täna korrata</p>
-              {upcomingCount > 0 && (
-                <p className="text-stone-400 text-sm mb-4">{upcomingCount} sõna tuleb hiljem</p>
-              )}
+              <p className="text-stone-500 mb-1">{ui.words_due}</p>
+              {upcomingCount > 0 && <p className="text-stone-400 text-sm mb-4">{upcomingCount} {ui.words_upcoming}</p>}
               <button onClick={() => startSession(false)} className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors mb-2">
-                Alusta tänastega
+                {ui.start_today}
               </button>
               <button onClick={() => startSession(true)} className="w-full py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl transition-colors text-sm">
-                Korda kõiki ({savedWords.length})
+                {ui.review_all} ({savedWords.length})
               </button>
             </>
           ) : (
             <div>
               <div className="text-4xl mb-3">✓</div>
-              <p className="text-stone-700 font-medium mb-1">Täna on kõik tehtud!</p>
-              {upcomingCount > 0 && <p className="text-stone-400 text-sm mb-4">{upcomingCount} sõna tuleb järgmistel päevadel</p>}
+              <p className="text-stone-700 font-medium mb-1">{ui.all_done}</p>
+              {upcomingCount > 0 && <p className="text-stone-400 text-sm mb-4">{upcomingCount} {ui.words_coming_next}</p>}
               <button onClick={() => startSession(true)} className="w-full py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 font-semibold rounded-xl transition-colors">
-                Korda kõiki ({savedWords.length})
+                {ui.review_all} ({savedWords.length})
               </button>
             </div>
           )}
@@ -112,9 +111,9 @@ export default function Review({ words, settings }) {
             <span>🟢 {score.easy} · 🟡 {score.ok} · 🔴 {score.hard}</span>
           </div>
           {mode === 'cards' ? (
-            <Flashcard key={queue[index].word} word={queue[index]} onAnswer={handleAnswer} settings={settings} />
+            <Flashcard key={queue[index].word} word={queue[index]} onAnswer={handleAnswer} settings={settings} ui={ui} />
           ) : (
-            <FillBlank key={queue[index].word + index} word={queue[index]} onNext={handleFillNext} settings={settings} />
+            <FillBlank key={queue[index].word + index} word={queue[index]} onNext={handleFillNext} settings={settings} ui={ui} />
           )}
         </div>
       )}
@@ -122,17 +121,17 @@ export default function Review({ words, settings }) {
       {done && (
         <div className="text-center py-8">
           <div className="text-4xl mb-3">🎉</div>
-          <p className="text-xl font-bold text-stone-800 mb-2">Sessioon lõppenud!</p>
+          <p className="text-xl font-bold text-stone-800 mb-2">{ui.session_done}</p>
           <div className="flex justify-center gap-4 text-sm mb-6">
-            <span className="text-green-600">Lihtne: {score.easy}</span>
-            <span className="text-amber-600">Okei: {score.ok}</span>
-            <span className="text-red-500">Raske: {score.hard}</span>
+            <span className="text-green-600">{ui.easy}: {score.easy}</span>
+            <span className="text-amber-600">{ui.ok}: {score.ok}</span>
+            <span className="text-red-500">{ui.hard}: {score.hard}</span>
           </div>
           <button
             onClick={() => { setQueue(null); setDone(false); }}
             className="px-8 py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 font-semibold rounded-xl transition-colors"
           >
-            Tagasi
+            {ui.back}
           </button>
         </div>
       )}

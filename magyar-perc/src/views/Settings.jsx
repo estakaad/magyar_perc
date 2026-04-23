@@ -1,14 +1,5 @@
 import { useState } from 'react';
-
-const LANGUAGES = [
-  'Afrikaans', 'Arabic', 'Bulgarian', 'Catalan', 'Chinese',
-  'Croatian', 'Czech', 'Danish', 'Dutch', 'English', 'Estonian',
-  'Finnish', 'French', 'German', 'Greek', 'Hebrew', 'Hindi',
-  'Hungarian', 'Indonesian', 'Italian', 'Japanese', 'Korean',
-  'Latvian', 'Lithuanian', 'Norwegian', 'Polish', 'Portuguese',
-  'Romanian', 'Russian', 'Serbian', 'Slovak', 'Spanish',
-  'Swedish', 'Thai', 'Turkish', 'Ukrainian', 'Vietnamese',
-];
+import { LANGUAGES } from '../ui';
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
@@ -51,7 +42,7 @@ export default function Settings({ current, onSave, onBack }) {
             onChange={e => setLearningLang(e.target.value)}
             className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-amber-400"
           >
-            {LANGUAGES.map(l => <option key={l}>{l}</option>)}
+            {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
           </select>
         </div>
 
@@ -62,7 +53,7 @@ export default function Settings({ current, onSave, onBack }) {
             onChange={e => setNativeLang(e.target.value)}
             className="w-full px-3 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-800 focus:outline-none focus:border-amber-400"
           >
-            {LANGUAGES.map(l => <option key={l}>{l}</option>)}
+            {LANGUAGES.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
           </select>
         </div>
 

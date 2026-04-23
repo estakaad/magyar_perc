@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { generatePhrases } from '../api';
+import { DEFAULT_UI } from '../ui';
 
 const THEMES = [
   'general', 'emotions', 'everyday life', 'food', 'time', 'money',
@@ -15,7 +16,7 @@ function Spinner() {
   );
 }
 
-function PhraseCard({ phrase, savedPhrases, onSave }) {
+function PhraseCard({ phrase, savedPhrases, onSave, ui }) {
   const [revealed, setRevealed] = useState(false);
   const isSaved = savedPhrases.some(p => p.word === phrase.word);
 
@@ -35,19 +36,19 @@ function PhraseCard({ phrase, savedPhrases, onSave }) {
       </div>
       {revealed && (
         <div className="mt-3 space-y-1.5 border-t border-stone-100 pt-3">
-          <p className="text-sm text-stone-400 italic">sõna-sõnalt: {phrase.literal}</p>
+          <p className="text-sm text-stone-400 italic">{ui.word_for_word}: {phrase.literal}</p>
           <p className="text-sm text-stone-700 font-medium">→ {phrase.meaning}</p>
           <p className="text-sm text-stone-500 mt-1">📝 {phrase.example}</p>
         </div>
       )}
       {!revealed && (
-        <p className="text-xs text-stone-300 mt-1">vajuta selgituse nägemiseks</p>
+        <p className="text-xs text-stone-300 mt-1">{ui.tap_for_explanation}</p>
       )}
     </div>
   );
 }
 
-function ReviewMode({ savedPhrases, onBack }) {
+function ReviewMode({ savedPhrases, onBack, ui }) {
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
 
@@ -55,8 +56,8 @@ function ReviewMode({ savedPhrases, onBack }) {
     return (
       <div className="text-center py-12 text-stone-400">
         <p className="text-3xl mb-2">☆</p>
-        <p>Salvesta väljendeid tärniga</p>
-        <button onClick={onBack} className="mt-4 text-amber-600 text-sm underline">← tagasi</button>
+        <p>{ui.no_saved_phrases}</p>
+        <button onClick={onBack} className="mt-4 text-amber-600 text-sm underline">← {ui.back}</button>
       </div>
     );
   }
@@ -67,7 +68,7 @@ function ReviewMode({ savedPhrases, onBack }) {
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <button onClick={onBack} className="text-stone-400 text-sm hover:text-stone-600">← tagasi</button>
+        <button onClick={onBack} className="text-stone-400 text-sm hover:text-stone-600">← {ui.back}</button>
         <span className="text-sm text-stone-400">{index + 1} / {savedPhrases.length}</span>
       </div>
       <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 text-center">
@@ -77,18 +78,18 @@ function ReviewMode({ savedPhrases, onBack }) {
             onClick={() => setRevealed(true)}
             className="px-6 py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl font-medium transition-colors"
           >
-            Näita
+            {ui.show}
           </button>
         ) : (
           <div className="space-y-2 text-left border-t border-stone-100 pt-4">
-            <p className="text-sm text-stone-400 italic">sõna-sõnalt: {phrase.literal}</p>
+            <p className="text-sm text-stone-400 italic">{ui.word_for_word}: {phrase.literal}</p>
             <p className="text-stone-700 font-medium">→ {phrase.meaning}</p>
             <p className="text-sm text-stone-500">📝 {phrase.example}</p>
             <button
               onClick={() => { setIndex(isLast ? 0 : index + 1); setRevealed(false); }}
               className="w-full mt-4 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors"
             >
-              {isLast ? 'Algusesse ↺' : 'Järgmine →'}
+              {isLast ? ui.to_start : ui.next}
             </button>
           </div>
         )}
@@ -97,7 +98,7 @@ function ReviewMode({ savedPhrases, onBack }) {
   );
 }
 
-export default function Phrases({ phrases, settings }) {
+export default function Phrases({ phrases, settings, ui = DEFAULT_UI }) {
   const [theme, setTheme] = useState('general');
   const [generated, setGenerated] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -121,12 +122,10 @@ export default function Phrases({ phrases, settings }) {
     setLoading(false);
   };
 
-  const handleSave = (phrase) => phrases.toggle(phrase);
-
   if (reviewMode) {
     return (
       <div className="p-4">
-        <ReviewMode savedPhrases={savedPhrases} onBack={() => setReviewMode(false)} />
+        <ReviewMode savedPhrases={savedPhrases} onBack={() => setReviewMode(false)} ui={ui} />
       </div>
     );
   }
@@ -153,13 +152,13 @@ export default function Phrases({ phrases, settings }) {
           disabled={loading}
           className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-stone-300 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2"
         >
-          {loading ? <><Spinner /> Genereerin...</> : 'Genereeri väljendid'}
+          {loading ? <><Spinner /> {ui.generating}</> : ui.generate_phrases}
         </button>
         <button
           onClick={() => setReviewMode(true)}
           className="px-4 py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl font-medium transition-colors relative"
         >
-          Korda
+          {ui.review_btn}
           {savedPhrases.length > 0 && (
             <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
               {savedPhrases.length}
@@ -170,12 +169,7 @@ export default function Phrases({ phrases, settings }) {
 
       <div className="space-y-3">
         {generated.map((phrase, i) => (
-          <PhraseCard
-            key={i}
-            phrase={phrase}
-            savedPhrases={savedPhrases}
-            onSave={handleSave}
-          />
+          <PhraseCard key={i} phrase={phrase} savedPhrases={savedPhrases} onSave={p => phrases.toggle(p)} ui={ui} />
         ))}
       </div>
     </div>

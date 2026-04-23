@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { generateFillBlank } from '../api';
+import { DEFAULT_UI } from '../ui';
 
-export default function FillBlank({ word, exercise: preGenerated, onNext, settings }) {
+export default function FillBlank({ word, exercise: preGenerated, onNext, settings, ui = DEFAULT_UI }) {
   const [exercise, setExercise] = useState(preGenerated || null);
   const [options, setOptions] = useState(
     preGenerated ? [...preGenerated.distractors, preGenerated.correct].sort(() => Math.random() - 0.5) : []
@@ -34,7 +35,7 @@ export default function FillBlank({ word, exercise: preGenerated, onNext, settin
       .catch(err => {
         if (cancelled) return;
         console.error('[FillBlank] error:', err);
-        setError('Viga ülesande genereerimisel');
+        setError(ui.exercise_error);
         setLoading(false);
       });
 
@@ -60,7 +61,7 @@ export default function FillBlank({ word, exercise: preGenerated, onNext, settin
     return (
       <div className="text-center py-8 text-stone-500">
         <p className="mb-4">{error}</p>
-        <button onClick={load} className="text-amber-600 underline">Proovi uuesti</button>
+        <button onClick={load} className="text-amber-600 underline">{ui.try_again}</button>
       </div>
     );
   }
@@ -69,7 +70,7 @@ export default function FillBlank({ word, exercise: preGenerated, onNext, settin
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-6">
-      <div className="text-sm text-stone-400 mb-1 font-medium">Täida lünk</div>
+      <div className="text-sm text-stone-400 mb-1 font-medium">{ui.fill_blank_title}</div>
       <p className="text-xl text-stone-800 mb-6 leading-relaxed font-medium">
         {exercise.sentence.replace('___', '______')}
       </p>
@@ -94,15 +95,12 @@ export default function FillBlank({ word, exercise: preGenerated, onNext, settin
       </div>
       {selected && (
         <div className={`rounded-xl p-3 mb-4 text-sm ${isCorrect ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-          {isCorrect ? '✓ Õige!' : `✗ Õige vastus: ${exercise.correct}`}
+          {isCorrect ? ui.correct : `${ui.wrong_prefix} ${exercise.correct}`}
         </div>
       )}
       {selected && (
-        <button
-          onClick={() => onNext(isCorrect)}
-          className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors"
-        >
-          Järgmine →
+        <button onClick={() => onNext(isCorrect)} className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors">
+          {ui.next}
         </button>
       )}
     </div>

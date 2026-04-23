@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { generateExamples } from '../api';
+import { DEFAULT_UI } from '../ui';
 
-export default function Flashcard({ word, onAnswer, settings }) {
+export default function Flashcard({ word, onAnswer, settings, ui = DEFAULT_UI }) {
   const [examples, setExamples] = useState(word.examples || null);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function Flashcard({ word, onAnswer, settings }) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
             </svg>
-            Laen näitelauseid...
+            {ui.loading_examples}
           </div>
         ) : examples.length > 0 ? (
           examples.map((ex, i) => (
@@ -49,13 +50,13 @@ export default function Flashcard({ word, onAnswer, settings }) {
 
       <div className="flex gap-2 mt-5">
         <button onClick={() => onAnswer('easy')} className="flex-1 py-3 bg-green-50 text-green-600 rounded-xl font-medium hover:bg-green-100 transition-colors text-sm">
-          Lihtne
+          {ui.easy}
         </button>
         <button onClick={() => onAnswer('ok')} className="flex-1 py-3 bg-amber-50 text-amber-600 rounded-xl font-medium hover:bg-amber-100 transition-colors text-sm">
-          Okei
+          {ui.ok}
         </button>
         <button onClick={() => onAnswer('hard')} className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors text-sm">
-          Raske
+          {ui.hard}
         </button>
       </div>
     </div>

@@ -49,6 +49,32 @@ export async function generateExamples(word, translation, learningLang, nativeLa
   return JSON.parse(match[0]);
 }
 
+export async function generateUITranslations(learningLang) {
+  const prompt = `Translate these Estonian UI strings to ${learningLang}. Keep them short and natural (1-3 words each). Return ONLY valid JSON with the same keys:
+${JSON.stringify({
+  tab_read: 'Loe', tab_review: 'Korda', tab_phrases: 'Väljendid',
+  generate: 'Genereeri', from_cache: 'Vahemälust', generating: 'Genereerin...',
+  cards: 'Kaardid', fill_blank_mode: 'Lünktäitmine',
+  words_due: 'sõna täna korrata', words_upcoming: 'sõna tuleb hiljem',
+  start_today: 'Alusta tänastega', review_all: 'Korda kõiki',
+  all_done: 'Täna on kõik tehtud!', words_coming_next: 'sõna tuleb järgmistel päevadel',
+  session_done: 'Sessioon lõppenud!', easy: 'Lihtne', ok: 'Okei', hard: 'Raske',
+  back: 'Tagasi', loading_examples: 'Laen näitelauseid...', fill_blank_title: 'Täida lünk',
+  next: 'Järgmine →', correct: '✓ Õige!', wrong_prefix: '✗ Õige vastus:',
+  exercise_error: 'Viga ülesande genereerimisel', try_again: 'Proovi uuesti',
+  generate_phrases: 'Genereeri väljendid', review_btn: 'Korda',
+  tap_for_explanation: 'vajuta selgituse nägemiseks', word_for_word: 'sõna-sõnalt',
+  save_phrases_hint: 'Salvesta väljendeid tärniga', show: 'Näita',
+  to_start: 'Algusesse ↺', translating: 'Tõlgin...', word_saved: '★ Salvestatud',
+  word_save: '☆ Salvesta', add_words_hint: 'Lisa sõnu Loe vaates ⭐ nupuga.',
+  no_saved_phrases: 'Salvesta väljendeid tärniga',
+})}`;
+  const text = await callClaude([{ role: 'user', content: prompt }], null, 1000);
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try { return JSON.parse(match[0]); } catch { return null; }
+}
+
 export async function generatePhrases(theme, learningLang, nativeLang, level) {
   const prompt = `Generate 5 real ${learningLang} idioms or set phrases for theme "${theme}", suitable for ${level}. Return ONLY JSON: {"phrases":[{"word":"phrase","literal":"word-for-word ${nativeLang}","meaning":"actual meaning in ${nativeLang}","example":"short example sentence"}]}`;
   const text = await callClaude([{ role: 'user', content: prompt }], null, 800);

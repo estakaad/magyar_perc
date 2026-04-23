@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import WordTooltip from './WordTooltip';
 import { translateWord } from '../api';
+import { DEFAULT_UI } from '../ui';
 
-export default function TextDisplay({ text, words, savedWords, onSaveWord, settings }) {
+export default function TextDisplay({ text, words, savedWords, onSaveWord, settings, ui = DEFAULT_UI }) {
   const [activeWord, setActiveWord] = useState(null);
   const [tooltipStyle, setTooltipStyle] = useState({});
   const containerRef = useRef(null);
@@ -73,6 +74,7 @@ export default function TextDisplay({ text, words, savedWords, onSaveWord, setti
           onSave={onSaveWord}
           onClose={() => setActiveWord(null)}
           style={tooltipStyle}
+          ui={ui}
         />
       )}
     </div>

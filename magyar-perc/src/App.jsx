@@ -2,23 +2,18 @@ import { useState } from 'react';
 import AuthGate from './components/AuthGate';
 import Read from './views/Read';
 import Review from './views/Review';
-import Phrases from './views/Phrases';
 import Settings from './views/Settings';
 import { useSyncedList } from './hooks/useSync';
 import { useSettings } from './hooks/useSettings';
-
-const TABS = [
-  { id: 'read', label: 'Loe' },
-  { id: 'review', label: 'Korda' },
-  { id: 'phrases', label: 'Väljendid' },
-];
+import { DEFAULT_UI } from './ui';
 
 function App({ email }) {
   const [activeTab, setActiveTab] = useState('read');
   const [showSettings, setShowSettings] = useState(false);
   const words = useSyncedList('words', email);
-  const phrases = useSyncedList('phrases', email);
   const { settings, ready: settingsReady, save: saveSettings } = useSettings(email);
+
+  const ui = settings?.ui ?? DEFAULT_UI;
 
   if (!settingsReady) {
     return (
@@ -47,29 +42,26 @@ function App({ email }) {
     );
   }
 
+  const TABS = [
+    { id: 'read', label: ui.tab_read },
+    { id: 'review', label: ui.tab_review },
+  ];
+
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col max-w-lg mx-auto relative">
       <header className="px-4 pt-5 pb-2 bg-stone-50 flex justify-between items-center">
         <h1 className="text-xl font-bold text-stone-800">
           {settings.learning_lang} <span className="text-stone-400 font-normal text-base">· {settings.reading_level}</span>
         </h1>
-        <button
-          onClick={() => setShowSettings(true)}
-          className="text-stone-400 hover:text-stone-600 text-xl p-1"
-        >
-          ⚙
-        </button>
+        <button onClick={() => setShowSettings(true)} className="text-stone-400 hover:text-stone-600 text-xl p-1">⚙</button>
       </header>
 
       <main className="flex-1 overflow-y-auto pb-20">
         <div className={activeTab === 'read' ? '' : 'hidden'}>
-          <Read words={words} settings={settings} />
+          <Read words={words} settings={settings} ui={ui} />
         </div>
         <div className={activeTab === 'review' ? '' : 'hidden'}>
-          <Review words={words} settings={settings} />
-        </div>
-        <div className={activeTab === 'phrases' ? '' : 'hidden'}>
-          <Phrases phrases={phrases} settings={settings} />
+          <Review words={words} settings={settings} ui={ui} />
         </div>
       </main>
 
@@ -80,9 +72,7 @@ function App({ email }) {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 py-4 text-sm font-semibold transition-colors ${
-                activeTab === tab.id
-                  ? 'text-amber-600 border-t-2 border-amber-500 -mt-px'
-                  : 'text-stone-400'
+                activeTab === tab.id ? 'text-amber-600 border-t-2 border-amber-500 -mt-px' : 'text-stone-400'
               }`}
             >
               {tab.label}
