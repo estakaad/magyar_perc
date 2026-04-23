@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { generateFillBlank } from '../api';
 
-// Accepts either `exercise` (pre-generated) or `word` (fetches from API)
-export default function FillBlank({ word, exercise: preGenerated, onNext }) {
+export default function FillBlank({ word, exercise: preGenerated, onNext, settings }) {
   const [exercise, setExercise] = useState(preGenerated || null);
   const [options, setOptions] = useState(
     preGenerated ? [...preGenerated.distractors, preGenerated.correct].sort(() => Math.random() - 0.5) : []
@@ -11,30 +10,40 @@ export default function FillBlank({ word, exercise: preGenerated, onNext }) {
   const [loading, setLoading] = useState(!preGenerated);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (preGenerated) return; // already set in initial state
-
+  const load = useCallback(() => {
+    if (preGenerated) return;
     let cancelled = false;
     setLoading(true);
     setExercise(null);
     setSelected(null);
     setError('');
 
-    generateFillBlank(word.hu, word.et)
+    generateFillBlank(
+      word.word,
+      word.translation,
+      settings?.learning_lang || 'Hungarian',
+      settings?.native_lang || 'Estonian',
+      settings?.production_level || 'B1'
+    )
       .then(result => {
         if (cancelled) return;
         setExercise(result);
         setOptions([...result.distractors, result.correct].sort(() => Math.random() - 0.5));
         setLoading(false);
       })
-      .catch(() => {
+      .catch(err => {
         if (cancelled) return;
+        console.error('[FillBlank] error:', err);
         setError('Viga ülesande genereerimisel');
         setLoading(false);
       });
 
     return () => { cancelled = true; };
-  }, [word?.hu, preGenerated]);
+  }, [word?.word, preGenerated, settings]);
+
+  useEffect(() => {
+    return load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -51,7 +60,7 @@ export default function FillBlank({ word, exercise: preGenerated, onNext }) {
     return (
       <div className="text-center py-8 text-stone-500">
         <p className="mb-4">{error}</p>
-        <button onClick={() => { setError(''); setLoading(true); }} className="text-amber-600 underline">Proovi uuesti</button>
+        <button onClick={load} className="text-amber-600 underline">Proovi uuesti</button>
       </div>
     );
   }

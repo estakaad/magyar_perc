@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import WordTooltip from './WordTooltip';
 import { translateWord } from '../api';
-import dict from '../data/hu_et_dict.json';
 
-export default function TextDisplay({ text, words, savedWords, onSaveWord }) {
+export default function TextDisplay({ text, words, savedWords, onSaveWord, settings }) {
   const [activeWord, setActiveWord] = useState(null);
   const [tooltipStyle, setTooltipStyle] = useState({});
   const containerRef = useRef(null);
@@ -15,7 +14,7 @@ export default function TextDisplay({ text, words, savedWords, onSaveWord }) {
   }, []);
 
   const wordMap = {};
-  words.forEach(w => { wordMap[w.hu.toLowerCase()] = w; });
+  words.forEach(w => { wordMap[w.word.toLowerCase()] = w; });
 
   const tokens = text.split(/(\s+|[.,!?;:„"()\[\]\-–—«»])/);
 
@@ -31,28 +30,20 @@ export default function TextDisplay({ text, words, savedWords, onSaveWord }) {
 
     const known = wordMap[clean.toLowerCase()];
     if (known) {
-      setActiveWord(activeWord?.hu === known.hu ? null : known);
+      setActiveWord(activeWord?.word === known.word ? null : known);
       return;
     }
 
-    // Check static dictionary first
-    const dictEntry = dict[clean.toLowerCase()];
-    if (dictEntry) {
-      setActiveWord({ hu: clean, et: dictEntry.et, note: dictEntry.note });
-      return;
-    }
-
-    // Fall back to API
-    setActiveWord({ hu: clean });
+    setActiveWord({ word: clean });
     try {
-      const result = await translateWord(clean);
-      setActiveWord({ hu: clean, et: result.et, note: result.note });
+      const result = await translateWord(clean, settings?.learning_lang || 'Hungarian', settings?.native_lang || 'Estonian');
+      setActiveWord({ word: clean, translation: result.translation, note: result.note });
     } catch {
-      setActiveWord({ hu: clean, et: '—', note: '' });
+      setActiveWord({ word: clean, translation: '—', note: '' });
     }
   };
 
-  const isWord = (token) => /[a-zA-ZáéíóöőúüűÁÉÍÓÖŐÚÜŰ]/.test(token);
+  const isWord = (token) => /\p{L}/u.test(token);
 
   return (
     <div ref={containerRef} className="relative text-lg leading-relaxed text-stone-800">
@@ -66,9 +57,7 @@ export default function TextDisplay({ text, words, savedWords, onSaveWord }) {
               key={i}
               onClick={e => handleWordClick(e, token)}
               className={`rounded px-0.5 transition-colors cursor-pointer hover:bg-amber-50 ${
-                isKnown
-                  ? 'underline decoration-dotted decoration-amber-400 underline-offset-2'
-                  : ''
+                isKnown ? 'underline decoration-dotted decoration-amber-400 underline-offset-2' : ''
               }`}
             >
               {token}

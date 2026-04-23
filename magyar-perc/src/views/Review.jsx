@@ -4,7 +4,7 @@ import FillBlank from '../components/FillBlank';
 
 const today = () => new Date().toISOString().split('T')[0];
 
-export default function Review({ words }) {
+export default function Review({ words, settings }) {
   const savedWords = words.items;
   const dueWords = savedWords.filter(w => !w.next_review || w.next_review <= today());
   const upcomingCount = savedWords.length - dueWords.length;
@@ -25,8 +25,8 @@ export default function Review({ words }) {
 
   const handleAnswer = (difficulty) => {
     const word = queue[index];
-    words.updateReview(word.hu, difficulty);
-    words.updateStats(word.hu, difficulty === 'hard' ? 'wrong' : 'correct');
+    words.updateReview(word.word, difficulty);
+    words.updateStats(word.word, difficulty === 'hard' ? 'wrong' : 'correct');
     setScore(s => ({ ...s, [difficulty]: s[difficulty] + 1 }));
     if (index + 1 < queue.length) setIndex(i => i + 1);
     else setDone(true);
@@ -34,7 +34,7 @@ export default function Review({ words }) {
 
   const handleFillNext = (wasCorrect) => {
     const word = queue[index];
-    words.updateReview(word.hu, wasCorrect ? 'ok' : 'hard');
+    words.updateReview(word.word, wasCorrect ? 'ok' : 'hard');
     if (index + 1 < queue.length) setIndex(i => i + 1);
     else setDone(true);
   };
@@ -61,7 +61,6 @@ export default function Review({ words }) {
 
   return (
     <div className="p-4">
-      {/* Mode toggle */}
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => { setMode('cards'); setQueue(null); setDone(false); }}
@@ -77,7 +76,6 @@ export default function Review({ words }) {
         </button>
       </div>
 
-      {/* Not started */}
       {!queue && !done && (
         <div className="text-center py-8">
           {dueWords.length > 0 ? (
@@ -107,7 +105,6 @@ export default function Review({ words }) {
         </div>
       )}
 
-      {/* Session */}
       {queue && !done && (
         <div>
           <div className="flex justify-between text-sm text-stone-400 mb-4">
@@ -115,14 +112,13 @@ export default function Review({ words }) {
             <span>🟢 {score.easy} · 🟡 {score.ok} · 🔴 {score.hard}</span>
           </div>
           {mode === 'cards' ? (
-            <Flashcard key={queue[index].hu} word={queue[index]} onAnswer={handleAnswer} />
+            <Flashcard key={queue[index].word} word={queue[index]} onAnswer={handleAnswer} settings={settings} />
           ) : (
-            <FillBlank key={queue[index].hu + index} word={queue[index]} onNext={handleFillNext} />
+            <FillBlank key={queue[index].word + index} word={queue[index]} onNext={handleFillNext} settings={settings} />
           )}
         </div>
       )}
 
-      {/* Done */}
       {done && (
         <div className="text-center py-8">
           <div className="text-4xl mb-3">🎉</div>

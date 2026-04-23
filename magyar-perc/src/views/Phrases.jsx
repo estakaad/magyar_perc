@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { generatePhrases } from '../api';
 
 const THEMES = [
-  'üldised', 'emotsioonid', 'argielust', 'toit', 'aeg', 'raha',
-  'töö', 'suhted', 'ilm', 'keha', 'loodus', 'liikumine',
+  'general', 'emotions', 'everyday life', 'food', 'time', 'money',
+  'work', 'relationships', 'weather', 'body', 'nature', 'movement',
 ];
 
 function Spinner() {
@@ -17,7 +17,7 @@ function Spinner() {
 
 function PhraseCard({ phrase, savedPhrases, onSave }) {
   const [revealed, setRevealed] = useState(false);
-  const isSaved = savedPhrases.some(p => p.hu === phrase.hu);
+  const isSaved = savedPhrases.some(p => p.word === phrase.word);
 
   return (
     <div
@@ -25,7 +25,7 @@ function PhraseCard({ phrase, savedPhrases, onSave }) {
       onClick={() => setRevealed(r => !r)}
     >
       <div className="flex justify-between items-start gap-2">
-        <p className="text-lg font-semibold text-stone-800">{phrase.hu}</p>
+        <p className="text-lg font-semibold text-stone-800">{phrase.word}</p>
         <button
           onClick={e => { e.stopPropagation(); onSave(phrase); }}
           className={`text-lg flex-shrink-0 transition-colors ${isSaved ? 'text-amber-400' : 'text-stone-300 hover:text-amber-400'}`}
@@ -71,7 +71,7 @@ function ReviewMode({ savedPhrases, onBack }) {
         <span className="text-sm text-stone-400">{index + 1} / {savedPhrases.length}</span>
       </div>
       <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 text-center">
-        <p className="text-2xl font-bold text-stone-800 mb-4">{phrase.hu}</p>
+        <p className="text-2xl font-bold text-stone-800 mb-4">{phrase.word}</p>
         {!revealed ? (
           <button
             onClick={() => setRevealed(true)}
@@ -97,8 +97,8 @@ function ReviewMode({ savedPhrases, onBack }) {
   );
 }
 
-export default function Phrases({ phrases }) {
-  const [theme, setTheme] = useState('üldised');
+export default function Phrases({ phrases, settings }) {
+  const [theme, setTheme] = useState('general');
   const [generated, setGenerated] = useState([]);
   const [loading, setLoading] = useState(false);
   const [reviewMode, setReviewMode] = useState(false);
@@ -108,7 +108,12 @@ export default function Phrases({ phrases }) {
     setLoading(true);
     setGenerated([]);
     try {
-      const result = await generatePhrases(theme);
+      const result = await generatePhrases(
+        theme,
+        settings?.learning_lang || 'Hungarian',
+        settings?.native_lang || 'Estonian',
+        settings?.production_level || 'B1'
+      );
       setGenerated(result.phrases || []);
     } catch {
       setGenerated([]);
@@ -128,7 +133,6 @@ export default function Phrases({ phrases }) {
 
   return (
     <div className="p-4">
-      {/* Theme pills */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-4 px-4 scrollbar-hide">
         {THEMES.map(t => (
           <button

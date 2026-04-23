@@ -1,6 +1,6 @@
 export default function WordTooltip({ word, savedWords, onSave, onClose, style }) {
-  const isSaved = savedWords.some(w => w.hu === word.hu);
-  const loading = !word.et;
+  const isSaved = savedWords.some(w => w.word === word.word);
+  const loading = !word.translation;
 
   return (
     <div
@@ -9,7 +9,7 @@ export default function WordTooltip({ word, savedWords, onSave, onClose, style }
       onClick={e => e.stopPropagation()}
     >
       <div className="flex justify-between items-start mb-1">
-        <span className="font-bold text-stone-800 text-base">{word.hu}</span>
+        <span className="font-bold text-stone-800 text-base">{word.word}</span>
         <button onClick={onClose} className="text-stone-400 hover:text-stone-600 text-sm ml-2 leading-none">✕</button>
       </div>
       {loading ? (
@@ -22,7 +22,7 @@ export default function WordTooltip({ word, savedWords, onSave, onClose, style }
         </div>
       ) : (
         <>
-          <div className="text-stone-600 text-sm mb-1">{word.et}</div>
+          <div className="text-stone-600 text-sm mb-1">{word.translation}</div>
           {word.note && (
             <div className="text-stone-400 text-xs mb-2 italic">{word.note}</div>
           )}
