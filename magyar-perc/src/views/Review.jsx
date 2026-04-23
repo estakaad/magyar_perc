@@ -15,8 +15,9 @@ export default function Review({ words }) {
   const [done, setDone] = useState(false);
   const [score, setScore] = useState({ easy: 0, ok: 0, hard: 0 });
 
-  const startSession = () => {
-    setQueue([...dueWords].sort(() => Math.random() - 0.5));
+  const startSession = (all = false) => {
+    const source = all ? savedWords : dueWords;
+    setQueue([...source].sort(() => Math.random() - 0.5));
     setIndex(0);
     setDone(false);
     setScore({ easy: 0, ok: 0, hard: 0 });
@@ -86,18 +87,21 @@ export default function Review({ words }) {
               {upcomingCount > 0 && (
                 <p className="text-stone-400 text-sm mb-4">{upcomingCount} sõna tuleb hiljem</p>
               )}
-              <button
-                onClick={startSession}
-                className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors"
-              >
-                Alusta
+              <button onClick={() => startSession(false)} className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors mb-2">
+                Alusta tänastega
+              </button>
+              <button onClick={() => startSession(true)} className="w-full py-2 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl transition-colors text-sm">
+                Korda kõiki ({savedWords.length})
               </button>
             </>
           ) : (
             <div>
               <div className="text-4xl mb-3">✓</div>
               <p className="text-stone-700 font-medium mb-1">Täna on kõik tehtud!</p>
-              <p className="text-stone-400 text-sm">{upcomingCount} sõna tuleb järgmistel päevadel</p>
+              {upcomingCount > 0 && <p className="text-stone-400 text-sm mb-4">{upcomingCount} sõna tuleb järgmistel päevadel</p>}
+              <button onClick={() => startSession(true)} className="w-full py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 font-semibold rounded-xl transition-colors">
+                Korda kõiki ({savedWords.length})
+              </button>
             </div>
           )}
         </div>
