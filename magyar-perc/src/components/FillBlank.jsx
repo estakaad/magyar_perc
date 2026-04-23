@@ -3,19 +3,16 @@ import { generateFillBlank } from '../api';
 
 // Accepts either `exercise` (pre-generated) or `word` (fetches from API)
 export default function FillBlank({ word, exercise: preGenerated, onNext }) {
-  const [exercise, setExercise] = useState(null);
-  const [options, setOptions] = useState([]);
+  const [exercise, setExercise] = useState(preGenerated || null);
+  const [options, setOptions] = useState(
+    preGenerated ? [...preGenerated.distractors, preGenerated.correct].sort(() => Math.random() - 0.5) : []
+  );
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(!preGenerated);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (preGenerated) {
-      setExercise(preGenerated);
-      setOptions([...preGenerated.distractors, preGenerated.correct].sort(() => Math.random() - 0.5));
-      setLoading(false);
-      return;
-    }
+    if (preGenerated) return; // already set in initial state
 
     let cancelled = false;
     setLoading(true);
