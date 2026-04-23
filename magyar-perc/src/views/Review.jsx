@@ -59,6 +59,17 @@ export default function Review({ words }) {
     }
   };
 
+  if (!words.ready) {
+    return (
+      <div className="flex justify-center py-16">
+        <svg className="animate-spin h-6 w-6 text-amber-400" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+        </svg>
+      </div>
+    );
+  }
+
   if (savedWords.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 py-16 text-center">
