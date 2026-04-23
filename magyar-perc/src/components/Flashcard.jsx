@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function Flashcard({ word, onKnew, onDidntKnow }) {
+export default function Flashcard({ word, onAnswer }) {
   const [revealed, setRevealed] = useState(false);
 
   return (
@@ -19,18 +19,15 @@ export default function Flashcard({ word, onKnew, onDidntKnow }) {
           {word.note && (
             <div className="text-sm text-stone-400 italic mb-6">{word.note}</div>
           )}
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={onDidntKnow}
-              className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors text-lg"
-            >
-              ✗ Ei teadnud
+          <div className="flex gap-2 mt-6">
+            <button onClick={() => onAnswer('hard')} className="flex-1 py-3 bg-red-50 text-red-600 rounded-xl font-medium hover:bg-red-100 transition-colors text-sm">
+              Raske
             </button>
-            <button
-              onClick={onKnew}
-              className="flex-1 py-3 bg-green-50 text-green-600 rounded-xl font-medium hover:bg-green-100 transition-colors text-lg"
-            >
-              ✓ Teadsin
+            <button onClick={() => onAnswer('ok')} className="flex-1 py-3 bg-amber-50 text-amber-600 rounded-xl font-medium hover:bg-amber-100 transition-colors text-sm">
+              Okei
+            </button>
+            <button onClick={() => onAnswer('easy')} className="flex-1 py-3 bg-green-50 text-green-600 rounded-xl font-medium hover:bg-green-100 transition-colors text-sm">
+              Lihtne
             </button>
           </div>
         </div>

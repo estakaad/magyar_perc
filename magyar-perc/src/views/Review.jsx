@@ -2,61 +2,40 @@ import { useState } from 'react';
 import Flashcard from '../components/Flashcard';
 import FillBlank from '../components/FillBlank';
 
+const today = () => new Date().toISOString().split('T')[0];
+
 export default function Review({ words }) {
   const savedWords = words.items;
-  const [mode, setMode] = useState('cards'); // 'cards' | 'fill'
-  const [queue, setQueue] = useState(null); // null = not started
+  const dueWords = savedWords.filter(w => !w.next_review || w.next_review <= today());
+  const upcomingCount = savedWords.length - dueWords.length;
+
+  const [mode, setMode] = useState('cards');
+  const [queue, setQueue] = useState(null);
   const [index, setIndex] = useState(0);
-  const [wrong, setWrong] = useState([]);
   const [done, setDone] = useState(false);
-  const [score, setScore] = useState({ correct: 0, wrong: 0 });
+  const [score, setScore] = useState({ easy: 0, ok: 0, hard: 0 });
 
   const startSession = () => {
-    setQueue([...savedWords].sort(() => Math.random() - 0.5));
+    setQueue([...dueWords].sort(() => Math.random() - 0.5));
     setIndex(0);
-    setWrong([]);
     setDone(false);
-    setScore({ correct: 0, wrong: 0 });
+    setScore({ easy: 0, ok: 0, hard: 0 });
   };
 
-  const handleKnew = () => {
+  const handleAnswer = (difficulty) => {
     const word = queue[index];
-    words.updateStats(word.hu, 'correct');
-    setScore(s => ({ ...s, correct: s.correct + 1 }));
-    next(false);
-  };
-
-  const handleDidntKnow = () => {
-    const word = queue[index];
-    words.updateStats(word.hu, 'wrong');
-    setScore(s => ({ ...s, wrong: s.wrong + 1 }));
-    setWrong(w => [...w, word]);
-    next(true);
-  };
-
-  const next = (addedWrong) => {
-    const nextIndex = index + 1;
-    if (nextIndex < queue.length) {
-      setIndex(nextIndex);
-    } else if (wrong.length > 0 || addedWrong) {
-      // Retry wrong words
-      const retryQueue = addedWrong ? [...wrong, queue[index]] : [...wrong];
-      setQueue(retryQueue);
-      setIndex(0);
-      setWrong([]);
-    } else {
-      setDone(true);
-    }
+    words.updateReview(word.hu, difficulty);
+    words.updateStats(word.hu, difficulty === 'hard' ? 'wrong' : 'correct');
+    setScore(s => ({ ...s, [difficulty]: s[difficulty] + 1 }));
+    if (index + 1 < queue.length) setIndex(i => i + 1);
+    else setDone(true);
   };
 
   const handleFillNext = (wasCorrect) => {
-    setScore(s => wasCorrect ? { ...s, correct: s.correct + 1 } : { ...s, wrong: s.wrong + 1 });
-    const nextIndex = index + 1;
-    if (nextIndex < queue.length) {
-      setIndex(nextIndex);
-    } else {
-      setDone(true);
-    }
+    const word = queue[index];
+    words.updateReview(word.hu, wasCorrect ? 'ok' : 'hard');
+    if (index + 1 < queue.length) setIndex(i => i + 1);
+    else setDone(true);
   };
 
   if (!words.ready) {
@@ -72,7 +51,7 @@ export default function Review({ words }) {
 
   if (savedWords.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full px-4 py-16 text-center">
+      <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
         <div className="text-4xl mb-3">⭐</div>
         <p className="text-stone-500 text-lg">Lisa sõnu Loe vaates ⭐ nupuga.</p>
       </div>
@@ -85,17 +64,13 @@ export default function Review({ words }) {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => { setMode('cards'); setQueue(null); setDone(false); }}
-          className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
-            mode === 'cards' ? 'bg-amber-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-          }`}
+          className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${mode === 'cards' ? 'bg-amber-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
         >
           Kaardid
         </button>
         <button
           onClick={() => { setMode('fill'); setQueue(null); setDone(false); }}
-          className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
-            mode === 'fill' ? 'bg-amber-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-          }`}
+          className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${mode === 'fill' ? 'bg-amber-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
         >
           Lünktäitmine
         </button>
@@ -104,13 +79,27 @@ export default function Review({ words }) {
       {/* Not started */}
       {!queue && !done && (
         <div className="text-center py-8">
-          <p className="text-stone-500 mb-2">{savedWords.length} sõna salvestatud</p>
-          <button
-            onClick={startSession}
-            className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors"
-          >
-            Alusta
-          </button>
+          {dueWords.length > 0 ? (
+            <>
+              <p className="text-2xl font-bold text-stone-800 mb-1">{dueWords.length}</p>
+              <p className="text-stone-500 mb-1">sõna täna korrata</p>
+              {upcomingCount > 0 && (
+                <p className="text-stone-400 text-sm mb-4">{upcomingCount} sõna tuleb hiljem</p>
+              )}
+              <button
+                onClick={startSession}
+                className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors"
+              >
+                Alusta
+              </button>
+            </>
+          ) : (
+            <div>
+              <div className="text-4xl mb-3">✓</div>
+              <p className="text-stone-700 font-medium mb-1">Täna on kõik tehtud!</p>
+              <p className="text-stone-400 text-sm">{upcomingCount} sõna tuleb järgmistel päevadel</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -119,21 +108,12 @@ export default function Review({ words }) {
         <div>
           <div className="flex justify-between text-sm text-stone-400 mb-4">
             <span>{index + 1} / {queue.length}</span>
-            <span className="text-green-600">✓ {score.correct} &nbsp; <span className="text-red-400">✗ {score.wrong}</span></span>
+            <span>🟢 {score.easy} · 🟡 {score.ok} · 🔴 {score.hard}</span>
           </div>
           {mode === 'cards' ? (
-            <Flashcard
-              key={queue[index].hu}
-              word={queue[index]}
-              onKnew={handleKnew}
-              onDidntKnow={handleDidntKnow}
-            />
+            <Flashcard key={queue[index].hu} word={queue[index]} onAnswer={handleAnswer} />
           ) : (
-            <FillBlank
-              key={queue[index].hu + index}
-              word={queue[index]}
-              onNext={handleFillNext}
-            />
+            <FillBlank key={queue[index].hu + index} word={queue[index]} onNext={handleFillNext} />
           )}
         </div>
       )}
@@ -143,15 +123,16 @@ export default function Review({ words }) {
         <div className="text-center py-8">
           <div className="text-4xl mb-3">🎉</div>
           <p className="text-xl font-bold text-stone-800 mb-2">Sessioon lõppenud!</p>
-          <p className="text-stone-500 mb-6">
-            Õigesti: <span className="text-green-600 font-bold">{score.correct}</span>
-            &nbsp;· Valesti: <span className="text-red-500 font-bold">{score.wrong}</span>
-          </p>
+          <div className="flex justify-center gap-4 text-sm mb-6">
+            <span className="text-green-600">Lihtne: {score.easy}</span>
+            <span className="text-amber-600">Okei: {score.ok}</span>
+            <span className="text-red-500">Raske: {score.hard}</span>
+          </div>
           <button
-            onClick={startSession}
-            className="px-8 py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors"
+            onClick={() => setQueue(null)}
+            className="px-8 py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 font-semibold rounded-xl transition-colors"
           >
-            Uuesti
+            Tagasi
           </button>
         </div>
       )}

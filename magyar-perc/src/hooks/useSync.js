@@ -49,5 +49,26 @@ export function useSyncedList(table, email) {
     setItems(prev => prev.map(i => i.hu === hu ? { ...i, [field]: newVal } : i));
   };
 
-  return { items, ready, add, remove, toggle, updateStats };
+  const updateReview = async (hu, difficulty) => {
+    const item = items.find(i => i.hu === hu);
+    if (!item) return;
+    const currentInterval = item.interval_days || 1;
+    let newInterval;
+    if (difficulty === 'hard') newInterval = 1;
+    else if (difficulty === 'ok') newInterval = Math.max(1, Math.round(currentInterval * 1.5));
+    else newInterval = Math.max(1, Math.round(currentInterval * 2.5)); // easy
+
+    const nextReview = new Date();
+    nextReview.setDate(nextReview.getDate() + newInterval);
+    const nextReviewStr = nextReview.toISOString().split('T')[0];
+
+    await supabase.from(table)
+      .update({ interval_days: newInterval, next_review: nextReviewStr })
+      .eq('email', email).eq('hu', hu);
+    setItems(prev => prev.map(i => i.hu === hu
+      ? { ...i, interval_days: newInterval, next_review: nextReviewStr }
+      : i));
+  };
+
+  return { items, ready, add, remove, toggle, updateStats, updateReview };
 }
