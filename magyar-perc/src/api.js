@@ -1,5 +1,9 @@
 const MODEL = 'claude-sonnet-4-20250514';
 
+const ESTONIAN_GRAMMAR_GUIDE = `Write in natural, correct Estonian. Use these Hungarian grammar terms in Estonian:
+Cases: nominatiiv, akkusatiiv (-t), inessiiv (-ban/-ben "sees"), illatiiv (-ba/-be "sisse"), superessiiv (-n/-on/-en/-ön "peal"), sublatiiv (-ra/-re "peale"), adessiiv (-nál/-nél "juures"), allatiiv (-hoz/-hez/-höz "juurde"), elatiiv (-ból/-ből "seest"), delatiiv (-ról/-ről "pealt"), ablatiiv (-tól/-től "juurest").
+Verb forms: olevik, minevik, tulevik, käskiv kõneviis, tingiv kõneviis, määratud konjugatsioon, määramata konjugatsioon, tagasõna, omastav sufiks, mitmus.`;
+
 async function callClaude(messages, system = null, maxTokens = 1000) {
   const body = { model: MODEL, max_tokens: maxTokens, messages };
   if (system) body.system = system;
@@ -23,19 +27,19 @@ Return the text followed by ONLY this JSON (nothing else after the text):
 
 List 8-10 key words. Include 5 fill-in-the-blank exercises using words from the text. Distractors should be the same part of speech.`;
 
-  return callClaude([{ role: 'user', content: prompt }], null, 1000);
+  return callClaude([{ role: 'user', content: prompt }], ESTONIAN_GRAMMAR_GUIDE, 1000);
 }
 
 export async function translateWord(word) {
-  const prompt = `Translate the Hungarian word "${word}" to Estonian. Return ONLY JSON: {"et":"translation","note":"brief grammar note or empty string"}`;
-  const text = await callClaude([{ role: 'user', content: prompt }], null, 200);
+  const prompt = `Translate the Hungarian word "${word}" to Estonian. Return ONLY JSON: {"et":"translation","note":"brief grammar note in Estonian or empty string"}`;
+  const text = await callClaude([{ role: 'user', content: prompt }], ESTONIAN_GRAMMAR_GUIDE, 200);
   const match = text.match(/\{[\s\S]*\}/);
   return JSON.parse(match[0]);
 }
 
 export async function explainSentence(sentence) {
-  const prompt = `Briefly explain the grammar of this Hungarian sentence in Estonian (max 4 sentences, practical focus). Sentence: ${sentence}`;
-  return callClaude([{ role: 'user', content: prompt }], null, 400);
+  const prompt = `Selgita lühidalt selle ungari lause grammatikat (max 4 lauset, praktiline). Lause: ${sentence}`;
+  return callClaude([{ role: 'user', content: prompt }], ESTONIAN_GRAMMAR_GUIDE, 400);
 }
 
 export async function generateFillBlank(word, translation) {
