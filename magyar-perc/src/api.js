@@ -39,9 +39,10 @@ export async function translateWord(word) {
 
 
 export async function generateFillBlank(word, translation) {
-  const prompt = `Write a natural B1-level Hungarian sentence using "${word}" (meaning: "${translation}"), replacing it with ___. Return ONLY JSON: {"sentence":"...___...","correct":"${word}","distractors":["w1","w2"]} — distractors must be same part of speech.`;
-  const text = await callClaude([{ role: 'user', content: prompt }], null, 300);
-  const match = text.match(/\{[\s\S]*\}/);
+  const prompt = `Write a natural B1-level Hungarian sentence using "${word}" (meaning: "${translation}"), replacing it with ___. Return ONLY JSON, no markdown: {"sentence":"...___...","correct":"${word}","distractors":["w1","w2"]} — distractors must be same part of speech.`;
+  const text = await callClaude([{ role: 'user', content: prompt }], null, 400);
+  const match = text.match(/\{[\s\S]*?\}/);
+  if (!match) throw new Error('No JSON in response');
   return JSON.parse(match[0]);
 }
 
