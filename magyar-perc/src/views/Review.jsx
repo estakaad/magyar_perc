@@ -129,7 +129,7 @@ export default function Review({ words }) {
             <span className="text-red-500">Raske: {score.hard}</span>
           </div>
           <button
-            onClick={() => setQueue(null)}
+            onClick={() => { setQueue(null); setDone(false); }}
             className="px-8 py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 font-semibold rounded-xl transition-colors"
           >
             Tagasi
