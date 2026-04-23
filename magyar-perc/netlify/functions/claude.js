@@ -3,6 +3,7 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method not allowed' };
   }
 
+  console.log('API key present:', !!process.env.ANTHROPIC_API_KEY, 'length:', process.env.ANTHROPIC_API_KEY?.length);
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
