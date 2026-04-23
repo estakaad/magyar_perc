@@ -15,7 +15,7 @@ export default function TextDisplay({ text, words, savedWords, onSaveWord, setti
   }, []);
 
   const wordMap = {};
-  words.forEach(w => { wordMap[w.word.toLowerCase()] = w; });
+  savedWords.forEach(w => { wordMap[w.word.toLowerCase()] = w; });
 
   const tokens = text.split(/(\s+|[.,!?;:„"()\[\]\-–—«»])/);
 

@@ -15,6 +15,54 @@ async function callClaude(messages, system = null, maxTokens = 1000) {
   return data.content[0].text;
 }
 
+export async function generateTextStreaming(theme, learningLang, nativeLang, level, onChunk) {
+  const prompt = `Write a natural ${level} ${learningLang} text (exactly 5 sentences) about one specific situation within the theme: "${theme}". Pick a narrow angle, not a general overview. Avoid rare words.
+
+Return the text followed by ONLY this JSON (nothing else after the text):
+{"words":[{"word":"word_from_text","translation":"${nativeLang} translation","note":"brief grammar note in ${nativeLang}"}]}
+
+List 8-10 key words from the text.`;
+
+  const body = {
+    model: MODEL, max_tokens: 1000, stream: true,
+    messages: [{ role: 'user', content: prompt }],
+  };
+
+  const res = await fetch('/api/claude', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6).trim();
+      if (!data || data === '[DONE]') continue;
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
+          fullText += parsed.delta.text;
+          onChunk(fullText);
+        }
+      } catch {}
+    }
+  }
+  return fullText;
+}
+
 export async function generateText(theme, learningLang, nativeLang, level) {
   const prompt = `Write a natural ${level} ${learningLang} text (exactly 5 sentences) about one specific situation within the theme: "${theme}". Pick a narrow angle, not a general overview. Avoid rare words.
 

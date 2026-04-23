@@ -19,8 +19,16 @@ app.post('/api/claude', async (req, res) => {
       },
       body: JSON.stringify(req.body),
     });
-    const data = await response.json();
-    res.status(response.status).json(data);
+
+    if (req.body.stream) {
+      res.setHeader('content-type', 'text/event-stream');
+      res.setHeader('cache-control', 'no-cache');
+      const { Readable } = await import('stream');
+      Readable.fromWeb(response.body).pipe(res);
+    } else {
+      const data = await response.json();
+      res.status(response.status).json(data);
+    }
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

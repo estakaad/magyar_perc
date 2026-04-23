@@ -13,8 +13,22 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify(req.body),
     });
-    const data = await response.json();
-    res.status(response.status).json(data);
+
+    if (req.body.stream) {
+      res.setHeader('content-type', 'text/event-stream');
+      res.setHeader('cache-control', 'no-cache');
+      const reader = response.body.getReader();
+      const pump = async () => {
+        const { done, value } = await reader.read();
+        if (done) { res.end(); return; }
+        res.write(value);
+        await pump();
+      };
+      await pump();
+    } else {
+      const data = await response.json();
+      res.status(response.status).json(data);
+    }
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

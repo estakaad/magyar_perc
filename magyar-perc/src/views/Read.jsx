@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { generateText } from '../api';
+import { generateTextStreaming } from '../api';
 import TextDisplay from '../components/TextDisplay';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { DEFAULT_UI } from '../ui';
 
 const THEMES = [
-  'everyday life', 'food & cooking', 'travel', 'transport', 'weather',
-  'family', 'work & office', 'health', 'shopping', 'time & dates',
-  'home', 'nature', 'culture & arts', 'news', 'sport',
+  'igapäevaelu', 'toit ja köök', 'reisimine', 'transport', 'ilm',
+  'perekond', 'töö ja kontor', 'tervis', 'ostlemine', 'aeg ja kuupäevad',
+  'kodu', 'loodus', 'kultuur ja kunst', 'uudised', 'sport',
 ];
 
 const CACHE_MAX = 30;
@@ -38,11 +38,19 @@ export default function Read({ words, settings, ui = DEFAULT_UI }) {
     setBodyText('');
     setTextWords([]);
     try {
-      const result = await generateText(
+      const result = await generateTextStreaming(
         theme,
         settings?.learning_lang || 'Hungarian',
         settings?.native_lang || 'Estonian',
-        settings?.reading_level || 'B1'
+        settings?.reading_level || 'B1',
+        (partial) => {
+          const jsonMatch = partial.match(/\{[\s\S]*"words"[\s\S]*\}/);
+          if (jsonMatch) {
+            setBodyText(partial.slice(0, partial.indexOf(jsonMatch[0])).trim());
+          } else {
+            setBodyText(partial);
+          }
+        }
       );
       const jsonMatch = result.match(/\{[\s\S]*"words"[\s\S]*\}/);
       if (jsonMatch) {
@@ -62,11 +70,13 @@ export default function Read({ words, settings, ui = DEFAULT_UI }) {
   };
 
   const handleFromCache = () => {
-    const cached = loadCache(settings).find(c => c.theme === theme);
-    if (cached) {
-      setBodyText(cached.text);
-      setTextWords(cached.words || []);
-    }
+    const all = loadCache(settings).filter(c => c.theme === theme);
+    const others = all.filter(c => c.text !== bodyText);
+    const pick = others.length > 0 ? others : all;
+    if (pick.length === 0) return;
+    const cached = pick[Math.floor(Math.random() * pick.length)];
+    setBodyText(cached.text);
+    setTextWords(cached.words || []);
   };
 
   return (
