@@ -1,1 +1,6 @@
 .env
+magyar-perc/.env
+magyar_perc_brief.md
+node_modules
+magyar-perc/node_modules
+magyar-perc/dist
